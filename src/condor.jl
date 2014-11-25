@@ -25,7 +25,7 @@ function condor_script(portnum::Integer, np::Integer, config::Dict)
 
     scriptf = open("$tdir/$jobname.sh", "w")
     println(scriptf, "#!/bin/sh")
-    println(scriptf, "$exehome/$exename --worker | /usr/bin/telnet $hostname $portnum")
+    println(scriptf, "$exehome/$exename --worker | /usr/bin/nc $hostname $portnum")
     close(scriptf)
 
     subf = open("$tdir/$jobname.sub", "w")
