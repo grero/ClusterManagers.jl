@@ -23,17 +23,16 @@ function condor_script(portnum::Integer, np::Integer, config::Dict)
     tdir = "$home/.julia-htc"
     run(`mkdir -p $tdir`)
 
-    scriptf = open("$tdir/$jobname.sh", "w")
+	script_fname = "$tdir/$jobname.sh"
+    scriptf = open(script_fname, "w")
     println(scriptf, "#!/bin/sh")
     println(scriptf, "$exehome/$exename --worker | /usr/bin/nc $hostname $portnum")
     close(scriptf)
-
+	run(`chmod u+x $script_fname`)
     subf = open("$tdir/$jobname.sub", "w")
-    println(subf, "executable = /bin/bash")
-    println(subf, "arguments = ./$jobname.sh")
+    println(subf, "executable = $tdir/$jobname.sh")
     println(subf, "universe = vanilla")
     println(subf, "should_transfer_files = yes")
-    println(subf, "transfer_input_files = $tdir/$jobname.sh")
     println(subf, "Notification = Error")
     for i = 1:np
         println(subf, "output = $tdir/$jobname-$i.o")
