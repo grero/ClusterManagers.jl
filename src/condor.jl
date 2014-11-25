@@ -14,7 +14,11 @@ function condor_script(portnum::Integer, np::Integer, config::Dict)
     exename = config[:exename]
     exeflags = config[:exeflags]
     home = ENV["HOME"]
-    hostname = ENV["HOSTNAME"]
+	if "HOSTNAME" in keys(ENV)
+		hostname = ENV["HOSTNAME"]
+	else
+		hostname = gethostname()
+	end
     jobname = "julia-$(getpid())"
     tdir = "$home/.julia-htc"
     run(`mkdir -p $tdir`)
