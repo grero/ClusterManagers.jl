@@ -13,7 +13,11 @@ function condor_script(portnum::Integer, np::Integer, config::Dict)
     exehome = config[:dir]
     exename = config[:exename]
     exeflags = config[:exeflags]
-    home = ENV["HOME"]
+	if "HOME" in keys(ENV)
+		home = ENV["HOME"]
+	else
+		home = homedir()
+	end
 	if "HOSTNAME" in keys(ENV)
 		hostname = ENV["HOSTNAME"]
 	else
