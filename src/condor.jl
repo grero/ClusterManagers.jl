@@ -13,6 +13,8 @@ function condor_script(portnum::Integer, np::Integer, config::Dict)
     exehome = config[:dir]
     exename = config[:exename]
     exeflags = config[:exeflags]
+    #TODO: make this a configurable option
+    priority = 15
 	if "HOME" in keys(ENV)
 		home = ENV["HOME"]
 	else
@@ -39,6 +41,7 @@ function condor_script(portnum::Integer, np::Integer, config::Dict)
     println(subf, "should_transfer_files = yes")
 	println(subf, "getenv = True")
     println(subf, "Notification = Error")
+    println(subf, "priority = $priority")
     for i = 1:np
         println(subf, "output = $tdir/$jobname-$i.o")
         println(subf, "error= $tdir/$jobname-$i.e")
@@ -87,4 +90,4 @@ function manage_htc_worker(id::Integer, config::Dict, op::Symbol)
     end
 end
 
-addprocs_htc(np::Integer) = addprocs(np, cman=HTCManager())
+addprocs_htc(np::Integer;kvs...) = addprocs(np, cman=HTCManager();kvs...)
