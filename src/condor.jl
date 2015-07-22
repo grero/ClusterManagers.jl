@@ -9,24 +9,35 @@ function condor_script(portnum::Integer, np::Integer, config::Dict)
     exehome = config[:dir]
     exename = config[:exename]
     exeflags = config[:exeflags]
-    home = ENV["HOME"]
-    hostname = ENV["HOSTNAME"]
+    #TODO: make this a configurable option
+    priority = 15
+	if "HOME" in keys(ENV)
+		home = ENV["HOME"]
+	else
+		home = homedir()
+	end
+	if "HOSTNAME" in keys(ENV)
+		hostname = ENV["HOSTNAME"]
+	else
+		hostname = gethostname()
+	end
     jobname = "julia-$(getpid())"
     tdir = "$home/.julia-htc"
     run(`mkdir -p $tdir`)
 
-    scriptf = open("$tdir/$jobname.sh", "w")
+	script_fname = "$tdir/$jobname.sh"
+    scriptf = open(script_fname, "w")
     println(scriptf, "#!/bin/sh")
-    println(scriptf, "$exehome/$exename --worker | /usr/bin/telnet $hostname $portnum")
+    println(scriptf, "$exehome/$exename --worker | /usr/bin/nc $hostname $portnum")
     close(scriptf)
-
+	run(`chmod u+x $script_fname`)
     subf = open("$tdir/$jobname.sub", "w")
-    println(subf, "executable = /bin/bash")
-    println(subf, "arguments = ./$jobname.sh")
+    println(subf, "executable = $tdir/$jobname.sh")
     println(subf, "universe = vanilla")
     println(subf, "should_transfer_files = yes")
-    println(subf, "transfer_input_files = $tdir/$jobname.sh")
+	println(subf, "getenv = True")
     println(subf, "Notification = Error")
+    println(subf, "priority = $priority")
     for i = 1:np
         println(subf, "output = $tdir/$jobname-$i.o")
         println(subf, "error= $tdir/$jobname-$i.e")
@@ -82,4 +93,4 @@ function manage(manager::HTCManager, id::Integer, config::Dict, op::Symbol)
     end
 end
 
-addprocs_htc(np::Integer) = addprocs(np, manager=HTCManager())
+addprocs_htc(np::Integer;kvs...) = addprocs(np, cman=HTCManager();kvs...)
